@@ -14,13 +14,13 @@ function SurveyForm() {
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
 
-  // This ref will be attached to our notification component
+  // Ref to scroll to the notification on error
   const notificationRef = useRef(null);
 
-  // A helper function to set error and scroll
+  // Helper to set error notification and scroll to it
   const setAndScrollToError = (message) => {
     setNotification({ type: 'error', message });
-    // We use setTimeout to ensure the notification has rendered before scrolling
+    // Ensure notification has rendered before attempting to scroll
     setTimeout(() => {
       notificationRef.current?.scrollIntoView({
         behavior: 'smooth',
@@ -29,6 +29,7 @@ function SurveyForm() {
     }, 0);
   };
 
+  // Fetches the survey template data
   useEffect(() => {
     const fetchSurvey = async () => {
       try {
@@ -38,6 +39,7 @@ function SurveyForm() {
         const response = await axios.get(`http://localhost:5001/api/surveys/${surveyId}`);
         setSurvey(response.data);
 
+        // Initialize answers state with empty strings for all questions
         const initialAnswers = {};
         response.data.surveyData.sections.forEach(section => {
           section.questions.forEach(q => {
@@ -56,6 +58,7 @@ function SurveyForm() {
     fetchSurvey();
   }, [surveyId]);
 
+  // Handles updates to individual answers
   const handleAnswerChange = (questionId, value) => {
     setAnswers(prevAnswers => ({
       ...prevAnswers,
@@ -63,9 +66,11 @@ function SurveyForm() {
     }));
   };
   
+  // Client-side form validation
   const validateForm = () => {
     for (const section of survey.surveyData.sections) {
       for (const question of section.questions) {
+        // Only validate visible questions
         const isVisible = checkVisibility(question.visibilityLogic, answers);
         
         if (isVisible && question.isRequired) {
@@ -76,11 +81,13 @@ function SurveyForm() {
           }
         }
         
+        // Validate number range if applicable
         if (isVisible && question.validationRules && question.validationRules.type === 'range') {
           const answer = parseFloat(answers[question.questionId]);
           const min = parseFloat(question.validationRules.min);
           const max = parseFloat(question.validationRules.max);
 
+          // Only validate if an answer is provided and it's a number
           if (answers[question.questionId] !== '' && !isNaN(answer)) {
             if (answer < min || answer > max) {
               setAndScrollToError(`Error: "${question.questionText}" must be between ${min} and ${max}.`);
@@ -90,15 +97,16 @@ function SurveyForm() {
         }
       }
     }
-    return true; // All good
+    return true; // All validation passed
   };
 
+  // Handles form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setNotification(null);
+    setNotification(null); // Clear any previous notifications
 
     if (!validateForm()) {
-      return; // Validation failed, notification is set and scrolled
+      return; //Stop if validation failed (error notification already set)
     }
 
     try {
@@ -106,6 +114,7 @@ function SurveyForm() {
         answers: answers,
       });
 
+      // Navigate to dashboard and pass a success message via state
       navigate('/', { state: { message: 'Survey submitted successfully!' } });
       
     } catch (err) {
@@ -129,6 +138,7 @@ function SurveyForm() {
         <h2 className="page-header-title">{title}</h2>
       </div>
       
+      {/* Notification display area, scrolled to on error */}
       <div ref={notificationRef}>
         <Notification
           message={notification?.message}

@@ -4,17 +4,18 @@ import axios from "axios";
 import SubmissionDetail from "../components/SubmissionDetail.jsx";
 
 const SubmissionsList = () => {
-  const [submissions, setSubmissions] = useState({});
+  const [submissions, setSubmissions] = useState({}); // Stores grouped submissions
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetches all submissions from the backend
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
         const response = await axios.get(
           "http://localhost:5001/api/submissions"
         );
-        setSubmissions(response.data);
+        setSubmissions(response.data); // Data is already grouped by survey title
       } catch (err) {
         setError("Failed to load submissions.");
         console.error(err);
@@ -37,6 +38,7 @@ const SubmissionsList = () => {
         <h2 className="page-header-title">View All Submissions</h2>
       </div>
 
+      {/* Display submissions if available, otherwise a message */}
       {Object.keys(submissions).length > 0 ? (
         Object.keys(submissions).map((surveyTitle) => (
           <div key={surveyTitle} className="card">

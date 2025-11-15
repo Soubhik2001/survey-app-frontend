@@ -23,6 +23,7 @@ const WeatherWidget = () => {
     }
   };
   
+  // Implements the "Ride or Not" logic
   const getRideRecommendation = (forecast) => {
     if (!forecast) return '';
     const maxTemp = forecast.temperature_2m_max[0];
